@@ -44,12 +44,17 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
+
+router = APIRouter()
+
+
+@router.get("/health")
 def health():
     return {"status": "ok"}
 
 
-@app.post("/urls", response_model=schemas.URLOut, status_code=201)
+@router.post("/urls", response_model=schemas.URLOut, status_code=201)
 def register_url(payload: schemas.URLCreate, db: Session = Depends(get_db)):
     existing = crud.get_url_by_value(db, payload.url)
     if existing:
@@ -57,12 +62,12 @@ def register_url(payload: schemas.URLCreate, db: Session = Depends(get_db)):
     return crud.create_url(db, payload.url)
 
 
-@app.get("/urls", response_model=List[schemas.URLOut])
+@router.get("/urls", response_model=List[schemas.URLOut])
 def list_urls(db: Session = Depends(get_db)):
     return crud.list_urls(db)
 
 
-@app.delete("/urls/{url_id}", status_code=204)
+@router.delete("/urls/{url_id}", status_code=204)
 def delete_url(url_id: int, db: Session = Depends(get_db)):
     url = crud.get_url(db, url_id)
     if not url:
@@ -70,12 +75,12 @@ def delete_url(url_id: int, db: Session = Depends(get_db)):
     crud.delete_url(db, url)
 
 
-@app.get("/status", response_model=List[schemas.URLStatus])
+@router.get("/status", response_model=List[schemas.URLStatus])
 def status(db: Session = Depends(get_db)):
     return crud.get_latest_status(db)
 
 
-@app.get("/history/{url_id}", response_model=List[schemas.HealthCheckOut])
+@router.get("/history/{url_id}", response_model=List[schemas.HealthCheckOut])
 def history(url_id: int, db: Session = Depends(get_db)):
     url = crud.get_url(db, url_id)
     if not url:
@@ -83,8 +88,13 @@ def history(url_id: int, db: Session = Depends(get_db)):
     return crud.get_history(db, url_id)
 
 
-@app.post("/check-now", status_code=202)
+@router.post("/check-now", status_code=202)
 def check_now():
     """Trigger an immediate round of checks (handy for demoing up/down flips)."""
     run_checks()
     return {"status": "checks triggered"}
+
+
+app.include_router(router)
+app.include_router(router, prefix="/api")
+

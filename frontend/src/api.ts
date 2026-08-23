@@ -3,7 +3,10 @@ import type { UrlStatus } from "./types";
 // Uses VITE_API_URL if set (e.g. for Vercel deployment pointing to Render backend).
 // Otherwise defaults to "/api" (for local Vite dev proxy and Nginx Docker setup).
 const RAW_BASE = import.meta.env.VITE_API_URL || "";
-const API_BASE = RAW_BASE ? RAW_BASE.replace(/\/$/, "") : "/api";
+const API_BASE = RAW_BASE
+  ? RAW_BASE.replace(/\/$/, "").replace(/\/api$/, "")
+  : "/api";
+
 
 export async function fetchStatus(): Promise<UrlStatus[]> {
   const res = await fetch(`${API_BASE}/status`);
