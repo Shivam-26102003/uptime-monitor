@@ -2,10 +2,18 @@ import type { UrlStatus } from "./types";
 
 // Uses VITE_API_URL if set (e.g. for Vercel deployment pointing to Render backend).
 // Otherwise defaults to "/api" (for local Vite dev proxy and Nginx Docker setup).
-const RAW_BASE = import.meta.env.VITE_API_URL || "";
+const RAW_BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" &&
+  window.location.hostname !== "localhost" &&
+  window.location.hostname !== "127.0.0.1"
+    ? "https://uptime-backend-0vem.onrender.com"
+    : "/api");
+
 const API_BASE = RAW_BASE
   ? RAW_BASE.replace(/\/$/, "").replace(/\/api$/, "")
   : "/api";
+
 
 
 export async function fetchStatus(): Promise<UrlStatus[]> {
