@@ -1,10 +1,9 @@
 import type { UrlStatus } from "./types";
 
-// Same-origin "/api" prefix. In dev, Vite proxies it to the backend; in the
-// Docker build, nginx proxies it. Either way the browser never needs to know
-// the backend's real host, which sidesteps the "http://backend:8000 from the
-// browser" trap (see AI_LOG.md).
-const API_BASE = "/api";
+// Uses VITE_API_URL if set (e.g. for Vercel deployment pointing to Render backend).
+// Otherwise defaults to "/api" (for local Vite dev proxy and Nginx Docker setup).
+const RAW_BASE = import.meta.env.VITE_API_URL || "";
+const API_BASE = RAW_BASE ? RAW_BASE.replace(/\/$/, "") : "/api";
 
 export async function fetchStatus(): Promise<UrlStatus[]> {
   const res = await fetch(`${API_BASE}/status`);

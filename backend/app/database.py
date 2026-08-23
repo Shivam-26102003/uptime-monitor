@@ -8,6 +8,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://uptime:uptime@localhost:5432/uptime"
 )
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # pool_pre_ping recycles dead connections (e.g. after Postgres restarts) so the
 # scheduler doesn't blow up on a stale socket between checks.

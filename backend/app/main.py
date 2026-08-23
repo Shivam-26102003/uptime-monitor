@@ -28,11 +28,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Uptime Monitor", version="1.0.0", lifespan=lifespan)
 
-# Wide-open CORS is fine for a local MVP; in prod this would be the dashboard origin.
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+allowed_origins = (
+    [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    if allowed_origins_env != "*"
+    else ["*"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=allowed_origins,
+    allow_credentials=True if allowed_origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
