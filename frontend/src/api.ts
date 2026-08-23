@@ -1,25 +1,31 @@
 import type { UrlStatus } from "./types";
 
-// Uses VITE_API_URL if set (e.g. for Vercel deployment pointing to Render backend).
-// Otherwise defaults to "/api" (for local Vite dev proxy and Nginx Docker setup).
-const RAW_BASE =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" &&
+const RENDER_BACKEND = "https://uptime-backend-0vem.onrender.com";
+
+const RAW_BASE = import.meta.env.VITE_API_URL || "";
+let API_BASE = "/api";
+
+if (RAW_BASE) {
+  API_BASE = RAW_BASE.replace(/\/$/, "").replace(/\/api$/, "");
+} else if (
+  typeof window !== "undefined" &&
   window.location.hostname !== "localhost" &&
   window.location.hostname !== "127.0.0.1"
-    ? "https://uptime-backend-0vem.onrender.com"
-    : "/api");
+) {
+  API_BASE = RENDER_BACKEND;
+}
 
-const API_BASE = RAW_BASE
-  ? RAW_BASE.replace(/\/$/, "").replace(/\/api$/, "")
-  : "/api";
-
-
+console.log("[Uptime Monitor] Target API_BASE:", API_BASE);
 
 export async function fetchStatus(): Promise<UrlStatus[]> {
-  const res = await fetch(`${API_BASE}/status`);
-  if (!res.ok) throw new Error(`Failed to load status (${res.status})`);
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/status`);
+    if (!res.ok) throw new Error(`Failed to load status (${res.status})`);
+    return await res.json();
+  } catch (err: any) {
+    console.error("[Uptime Monitor] Error fetching status from:", `${API_BASE}/status`, err);
+    throw err;
+  }
 }
 
 export async function addUrl(url: string): Promise<void> {
